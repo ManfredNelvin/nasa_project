@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Image of the Day</title>
+    <style>
+      body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+}
+
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#search-section {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+#search-form {
+    display: flex;
+    align-items: center;
+}
+
+#search-form label {
+    margin-right: 10px;
+}
+
+#search-input {
+    width: 200px;
+}
+
+#search-history {
+    list-style-type: none;
+    padding: 0;
+}
+
+#search-history li {
+    cursor: pointer;
+    margin: 5px 0;
+    color: #0077cc;
+}
+
+#current-image-container img {
+    max-width: 100%;
+    height: auto;
+}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NASA Image of the Day</h1>
+    </header>
+    <main>
+        <section id="search-section">
+            <form id="search-form">
+                <label for="search-input">Select a Date:</label>
+                <input type="date" id="search-input" required>
+                <button type="submit">Search</button>
+            </form>
+            <ul id="search-history"></ul>
+        </section>
+        <section id="current-image-container">
+            <!-- Current image will be displayed here -->
+        </section>
+    </main>
+    <script>
+      const API_KEY = "Cc4hOgg1Jyu1FrAFxehWDOLAdwv26LNE2PWtphBF";
+const searchForm = document.getElementById("search-form");
+const searchInput = document.getElementById("search-input");
+const currentImageContainer = document.getElementById("current-image-container");
+const searchHistoryList = document.getElementById("search-history");
+
+// Function to fetch and display the current image of the day
+function getCurrentImageOfTheDay() {
+    const currentDate = new Date().toISOString().split("T")[0];
+    const apiUrl = `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&date=${currentDate}`;
+
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            displayImage(data);
+        })
+        .catch(error => {
+            console.error("Error fetching current image:", error);
+            currentImageContainer.innerHTML = "Error fetching the image.";
+        });
+}
+
+// Function to fetch and display the image for a selected date
+function getImageOfTheDay(date) {
+    const apiUrl = `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&date=${date}`;
+
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            displayImage(data);
+            saveSearch(date);
+        })
+        .catch(error => {
+            console.error("Error fetching image:", error);
+            currentImageContainer.innerHTML = "Error fetching the image.";
+        });
+}
+
+// Function to display the image and title in the UI
+function displayImage(data) {
+    currentImageContainer.innerHTML = `
+        <img src="${data.url}" alt="${data.title}">
+        <h2>${data.title}</h2>
+    `;
+}
+
+// Function to save a search to local storage
+function saveSearch(date) {
+    const searches = JSON.parse(localStorage.getItem("searches")) || [];
+    searches.push(date);
+    localStorage.setItem("searches", JSON.stringify(searches));
+    addSearchToHistory();
+}
+
+// Function to add search history to the UI
+function addSearchToHistory() {
+    const searches = JSON.parse(localStorage.getItem("searches")) || [];
+    searchHistoryList.innerHTML = "";
+    searches.forEach(date => {
+        const listItem = document.createElement("li");
+        listItem.textContent = date;
+        listItem.addEventListener("click", () => getImageOfTheDay(date));
+        searchHistoryList.appendChild(listItem);
+    });
+}
+
+// Event listener for form submission
+searchForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const selectedDate = searchInput.value;
+    getImageOfTheDay(selectedDate);
+    searchInput.value = "";
+});
+
+// Initial load: Fetch and display the current image of the day and search history
+getCurrentImageOfTheDay();
+addSearchToHistory();
+    </script>
+</body>
+</html>
